@@ -3,15 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>💕 AI Love Lines</title>
-<meta name="description" content="AI-powered girlfriend & boyfriend lines in Hinglish, Hindi, Urdu and more!">
-<meta name="theme-color" content="#ff4d8d">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Love Lines">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+<title>💕 Girlfriend AI Lines</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Poppins:wght@300;400;600&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -463,62 +455,70 @@
     opacity: 0.4;
   }
 
-  /* PWA Install Banner */
-  .install-banner {
+  /* API Key Modal */
+  .api-modal {
     display: none;
     position: fixed;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--card);
-    border: 1px solid var(--pink);
-    border-radius: 14px;
-    padding: 14px 18px;
+    inset: 0;
+    background: rgba(0,0,0,0.88);
     z-index: 9999;
-    width: calc(100% - 32px);
-    max-width: 420px;
-    box-shadow: 0 4px 24px rgba(255,77,141,0.3);
-    gap: 12px;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
+    padding: 20px;
   }
 
-  .install-banner.show { display: flex; }
+  .api-modal-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px 22px;
+    width: 100%;
+    max-width: 400px;
+  }
 
-  .install-banner p {
+  .api-modal-box h3 {
+    font-family: 'Dancing Script', cursive;
+    font-size: 24px;
+    color: var(--pink);
+    margin-bottom: 8px;
+    text-align: center;
+  }
+
+  .api-modal-box p {
     font-size: 13px;
-    color: var(--text);
-    line-height: 1.4;
-    flex: 1;
-  }
-
-  .install-banner p span {
-    display: block;
-    font-size: 11px;
     color: var(--dim);
-    margin-top: 2px;
+    text-align: center;
+    margin-bottom: 18px;
+    line-height: 1.6;
   }
 
-  .btn-install {
+  .api-modal-box p a { color: var(--soft); }
+
+  .api-key-input {
+    width: 100%;
+    background: var(--dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Poppins';
+    font-size: 13px;
+    padding: 12px 14px;
+    outline: none;
+    margin-bottom: 14px;
+  }
+
+  .api-key-input:focus { border-color: var(--pink); }
+
+  .btn-save-key {
+    width: 100%;
     background: linear-gradient(135deg, var(--rose), var(--pink));
     color: white;
     border: none;
-    border-radius: 8px;
-    padding: 8px 14px;
-    font-family: 'Poppins';
-    font-size: 13px;
-    font-weight: 600;
+    border-radius: 10px;
+    padding: 13px;
+    font-family: 'Dancing Script', cursive;
+    font-size: 20px;
     cursor: pointer;
-    white-space: nowrap;
-  }
-
-  .btn-dismiss {
-    background: transparent;
-    border: none;
-    color: var(--dim);
-    font-size: 18px;
-    cursor: pointer;
-    padding: 0 4px;
   }
 </style>
 </head>
@@ -527,11 +527,14 @@
 <!-- Floating hearts -->
 <div class="hearts-bg" id="heartsBg"></div>
 
-<!-- PWA Install Banner -->
-<div class="install-banner" id="installBanner">
-  <p>💕 App install karo!<span>Home screen pe add karo — fast & offline!</span></p>
-  <button class="btn-install" id="installBtn">Install</button>
-  <button class="btn-dismiss" onclick="document.getElementById('installBanner').classList.remove('show')">✕</button>
+<!-- API Key Modal -->
+<div class="api-modal" id="apiModal">
+  <div class="api-modal-box">
+    <h3>🔑 API Key Daalo</h3>
+    <p>Groq ki free API key daalo — ek baar daalo, save ho jayegi!<br><a href="https://console.groq.com/keys" target="_blank">console.groq.com → API Keys → Create</a></p>
+    <input class="api-key-input" id="apiKeyInput" type="password" placeholder="gsk_xxxxxxxxxxxx">
+    <button class="btn-save-key" onclick="saveApiKey()">💾 Save & Continue</button>
+  </div>
 </div>
 
 <header>
@@ -623,52 +626,19 @@
 </main>
 
 <script>
-// ============================
-// 🔑 APNI OPENROUTER KEY YAHAN DAALO
-// ============================
-const HARDCODED_API_KEY = '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';
-// ============================
-
-// PWA: Register Service Worker inline (no separate sw.js file needed)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    const swCode = `
-const CACHE_NAME = 'ai-love-lines-v1';
-self.addEventListener('install', e => { self.skipWaiting(); });
-self.addEventListener('activate', e => { self.clients.claim(); });
-self.addEventListener('fetch', e => {
-  if (e.request.url.includes('openrouter.ai') || e.request.url.includes('fonts.googleapis')) {
-    e.respondWith(fetch(e.request).catch(() => new Response('Offline', {status:503})));
-    return;
-  }
-  e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
-});`;
-    const blob = new Blob([swCode], { type: 'application/javascript' });
-    const swUrl = URL.createObjectURL(blob);
-    navigator.serviceWorker.register(swUrl).catch(() => {});
-  });
+function saveApiKey() {
+  const key = document.getElementById('apiKeyInput').value.trim();
+  if (!key) { alert('Key daalo pehle!'); return; }
+  localStorage.setItem('or_api_key', key);
+  document.getElementById('apiModal').style.display = 'none';
+  generate();
 }
 
-// PWA: Install prompt
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  setTimeout(() => {
-    document.getElementById('installBanner').classList.add('show');
-  }, 3000);
-});
-
-document.getElementById('installBtn').addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  document.getElementById('installBanner').classList.remove('show');
-});
-
-window.addEventListener('appinstalled', () => {
-  document.getElementById('installBanner').classList.remove('show');
+// Show modal if no key saved
+window.addEventListener('load', () => {
+  if (!localStorage.getItem('or_api_key')) {
+    document.getElementById('apiModal').style.display = 'flex';
+  }
 });
 
 // Floating hearts
@@ -688,8 +658,9 @@ for (let i = 0; i < 18; i++) {
 let selectedCat = 'compliment';
 let lastLines = [];
 let allUsedLines = {};
-let currentGender = 'gf';
+let currentGender = 'gf'; // 'gf' or 'bf'
 
+// Gender switch
 function setGender(g) {
   currentGender = g;
   const body = document.body;
@@ -715,10 +686,11 @@ function setGender(g) {
     nameInput.placeholder = 'Boyfriend ka naam (optional) 💙';
   }
 
+  // Reset output on gender switch
   document.getElementById('placeholder').style.display = 'block';
   document.getElementById('resultArea').style.display = 'none';
   document.getElementById('bottomBtns').style.display = 'none';
-  document.getElementById('placeholder').innerHTML = '<span>💌</span>Category choose karo<br>aur button dabao';
+  document.getElementById('placeholder').innerHTML = '<span>' + (g === 'gf' ? '💌' : '💌') + '</span>Category choose karo<br>aur button dabao';
 }
 
 function selectCat(el, cat) {
@@ -728,12 +700,20 @@ function selectCat(el, cat) {
 }
 
 const catNames = {
-  compliment: '💐 Compliment', tarif: '✨ Tarif', love: '❤️ Love Line',
-  shayari: '🌙 Shayari', roast: '🔥 Lovely Roast', pickup: '😍 Pickup Line',
-  breakup: '💔 Breakup', vlog: '🎬 Emotional Vlog', birthday: '🎂 Birthday',
-  sorry: '🙏 Sorry / Manana', flirty: '😏 Flirty'
+  compliment: '💐 Compliment',
+  tarif: '✨ Tarif',
+  love: '❤️ Love Line',
+  shayari: '🌙 Shayari',
+  roast: '🔥 Lovely Roast',
+  pickup: '😍 Pickup Line',
+  breakup: '💔 Breakup',
+  vlog: '🎬 Emotional Vlog',
+  birthday: '🎂 Birthday',
+  sorry: '🙏 Sorry / Manana',
+  flirty: '😏 Flirty'
 };
 
+// Prompts for both genders
 const catPromptsGF = {
   compliment: "Write 5 sweet compliments a real Indian boyfriend says to his girlfriend — like actually talking to her, not writing a poem. Simple, warm, from the heart.",
   tarif: "Write 5 tarif lines a real desi boyfriend says to his girlfriend — the kind of thing you whisper or say while smiling at her. Natural, not formal.",
@@ -779,11 +759,11 @@ async function generate() {
     hindi: "Hindi written in Roman script (no Devanagari)",
     urdu: "Urdu with poetic Urdu words in Roman script",
     english: "English",
-    bhojpuri: "Bhojpuri language written in Roman script — use real Bhojpuri words like 'hamar', 'tohar', 'raur', 'kaisan', 'bade', 'dekhaa', 'suna' etc.",
-    gujarati: "Gujarati language written in Roman script — use real Gujarati words like 'kem cho', 'tamne', 'mane', 'pyaar', 'dil', 'sundari', 'jaanu', 'chhe' etc.",
-    marathi: "Marathi language written in Roman script — use real Marathi words like 'tu', 'mala', 'tula', 'khup', 'aavdat', 'sundar', 'majhi', 'aahe' etc.",
-    punjabi: "Punjabi language written in Roman script — use real Punjabi words like 'tenu', 'menu', 'pyaar', 'dil', 'sohni', 'yaar', 'saanu', 'rabba' etc.",
-    bengali: "Bengali language written in Roman script — use real Bengali words like 'tumi', 'ami', 'bhalo', 'bashi', 'shundor', 'mon', 'amar', 'tomar' etc."
+    bhojpuri: "Bhojpuri language written in Roman script — use real Bhojpuri words like 'hamar', 'tohar', 'raur', 'kaisan', 'bade', 'dekhaa', 'suna' etc. Sound like a real Bhojpuri-speaking person from UP/Bihar, natural and warm",
+    gujarati: "Gujarati language written in Roman script — use real Gujarati words like 'kem cho', 'tamne', 'mane', 'pyaar', 'dil', 'sundari', 'jaanu', 'chhe', 'badhuj' etc. Sound like a real Gujarati-speaking person, warm and sweet",
+    marathi: "Marathi language written in Roman script — use real Marathi words like 'tu', 'mala', 'tula', 'khup', 'aavdat', 'sundar', 'majhi', 'maze', 'aahe', 'mi' etc. Sound like a real Marathi-speaking person from Maharashtra, natural and loving",
+    punjabi: "Punjabi language written in Roman script — use real Punjabi words like 'tenu', 'menu', 'pyaar', 'dil', 'sohni', 'yaar', 'saanu', 'ki haal', 'rabba', 'teri', 'mere' etc. Sound like a real Punjabi-speaking person, full of warmth and energy",
+    bengali: "Bengali language written in Roman script — use real Bengali words like 'tumi', 'ami', 'bhalo', 'bashi', 'shundor', 'mon', 'amar', 'tomar', 'aacho', 'kotha' etc. Sound like a real Bengali-speaking person, warm, soft and emotional"
   };
 
   btn.disabled = true;
@@ -797,11 +777,12 @@ async function generate() {
   const partnerWord = currentGender === 'gf' ? 'girlfriend' : 'boyfriend';
   const speakerWord = currentGender === 'gf' ? 'boyfriend' : 'girlfriend';
 
+  // Track used lines per category+gender combo
   const key = `${currentGender}_${selectedCat}`;
   if (!allUsedLines[key]) allUsedLines[key] = [];
   const usedBefore = allUsedLines[key];
-  const randomSeed = Math.floor(Math.random() * 999999);
   const timestamp = Date.now();
+  const randomSeed = Math.floor(Math.random() * 999999);
 
   const prompt = `${catPrompts[selectedCat]}
 ${name ? `Their name is "${name}" — use it naturally in 1-2 lines only.` : ''}
@@ -810,47 +791,47 @@ Speaker: ${speakerWord} talking to/about their ${partnerWord}
 
 VERY IMPORTANT — Sound like a real human, not a robot:
 - Use simple everyday words — NO fancy, technical, or dictionary words
-- NO words like: "radiant", "luminous", "ethereal", "profound", "captivating", "mesmerizing" — these sound fake
-- Talk like a real person — short sentences, natural flow
+- NO words like: "radiant", "luminous", "ethereal", "profound", "captivating", "mesmerizing", "eloquent", "enchanting", "celestial", "magnificent" — these sound fake and robotic
+- Talk like a real person — short sentences, natural flow, the way someone actually speaks
 - Emotions should feel REAL, not performed
 - Each line: 5-10 seconds to say out loud
-- UNIQUENESS: Seed: ${randomSeed} | Time: ${timestamp}
-- Every line MUST use completely different words, metaphors, feelings
-${usedBefore.length > 0 ? `- NEVER repeat these:\n${usedBefore.slice(-20).map((l,i) => `  ${i+1}. "${l}"`).join('\n')}` : ''}
+- UNIQUENESS IS CRITICAL — Seed: ${randomSeed} | Time: ${timestamp}
+- Every line MUST use completely different words, metaphors, feelings, situations — no two lines should feel similar at all
+- Think from 5 totally different angles — one funny, one sad, one cute, one deep, one simple
+${usedBefore.length > 0 ? `- STRICTLY FORBIDDEN — never repeat or sound like these:\n${usedBefore.slice(-20).map((l,i) => `  ${i+1}. "${l}"`).join('\n')}` : ''}
 
-Return ONLY a JSON array of 5 strings. No markdown, no extra text.
+Return ONLY a JSON array of 5 strings. No markdown, no extra text, just the array.
 Example: ["line 1", "line 2", "line 3", "line 4", "line 5"]`;
 
   try {
-    const apiKey = HARDCODED_API_KEY;
-    if (!apiKey || apiKey.length < 20) {
+    const apiKey = localStorage.getItem('or_api_key');
+    if (!apiKey) {
       loading.style.display = 'none';
-      placeholder.style.display = 'block';
-      placeholder.innerHTML = '<span>🔑</span>API Key set nahi hai!';
+      document.getElementById('apiModal').style.display = 'flex';
       btn.disabled = false;
       return;
     }
 
+    // Try Groq models — Deepseek + Llama
     const models = [
-      'google/gemini-2.0-flash-exp:free',
-      'meta-llama/llama-3.3-70b-instruct:free'
+      { url: 'https://api.groq.com/openai/v1/chat/completions', model: 'deepseek-r1-distill-llama-70b' },
+      { url: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama-3.3-70b-versatile' },
+      { url: 'https://api.groq.com/openai/v1/chat/completions', model: 'llama3-70b-8192' }
     ];
 
     let lastLines_temp = null;
     let modelError = null;
 
-    for (const model of models) {
+    for (const m of models) {
       try {
-        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        const res = await fetch(m.url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`,
-            "HTTP-Referer": window.location.href,
-            "X-Title": "AI Love Lines"
+            "Authorization": `Bearer ${apiKey}`
           },
           body: JSON.stringify({
-            model: model,
+            model: m.model,
             max_tokens: 1000,
             messages: [{ role: "user", content: prompt }]
           })
@@ -859,7 +840,7 @@ Example: ["line 1", "line 2", "line 3", "line 4", "line 5"]`;
         const data = await res.json();
         if (data.error) { modelError = data.error.message; continue; }
         const raw = data.choices?.[0]?.message?.content || '';
-        const clean = raw.replace(/```json|```/g, '').trim();
+        const clean = raw.replace(/```json|```/g, '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
         lastLines_temp = JSON.parse(clean);
         break;
       } catch(e) { modelError = e.message; continue; }
@@ -867,6 +848,8 @@ Example: ["line 1", "line 2", "line 3", "line 4", "line 5"]`;
 
     if (!lastLines_temp) throw new Error(modelError || 'All models failed');
     lastLines = lastLines_temp;
+
+    // Save to history so they never repeat
     allUsedLines[key] = [...(allUsedLines[key] || []), ...lastLines];
 
     loading.style.display = 'none';
@@ -882,6 +865,7 @@ Example: ["line 1", "line 2", "line 3", "line 4", "line 5"]`;
       textSpan.className = 'line-text';
       textSpan.textContent = line;
 
+      // Buttons row
       const btnsRow = document.createElement('div');
       btnsRow.className = 'line-btns-row';
 
@@ -917,7 +901,8 @@ function shareOneLine(text) {
   if (navigator.share) {
     navigator.share({ title: '💕 AI Line', text: text }).catch(() => {});
   } else {
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
   }
 }
 
@@ -925,10 +910,17 @@ function shareLines() {
   if (!lastLines.length) return;
   const catLabel = catNames[selectedCat] || '';
   const text = `💕 ${catLabel} Lines\n\n` + lastLines.map((l, i) => `${i + 1}. ${l}`).join('\n\n');
+
+  // Try native Web Share API (works on mobile)
   if (navigator.share) {
-    navigator.share({ title: 'AI Love Lines 💕', text: text }).catch(() => {});
+    navigator.share({
+      title: 'AI Love Lines 💕',
+      text: text
+    }).catch(() => {});
   } else {
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+    // Fallback: open WhatsApp
+    const encoded = encodeURIComponent(text);
+    window.open(`https://wa.me/?text=${encoded}`, '_blank');
   }
 }
 
@@ -938,32 +930,50 @@ function copyAll() {
   const btn = document.querySelector('.btn-copy-all');
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text).then(() => showCopied(btn)).catch(() => fallback(text, btn));
-  } else { fallback(text, btn); }
+  } else {
+    fallback(text, btn);
+  }
 }
 
 function copyOneLine(text, btn) {
   if (navigator.clipboard && window.isSecureContext) {
     navigator.clipboard.writeText(text).then(() => linecopied(btn)).catch(() => fallbackLine(text, btn));
-  } else { fallbackLine(text, btn); }
+  } else {
+    fallbackLine(text, btn);
+  }
 }
 
 function fallbackLine(text, btn) {
   const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, 99999);
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, 99999);
   try { document.execCommand('copy'); linecopied(btn); } catch(e) {}
   document.body.removeChild(ta);
 }
 
 function linecopied(btn) {
-  btn.innerHTML = '✅ Copied!'; btn.classList.add('done');
-  setTimeout(() => { btn.innerHTML = '📋 Copy'; btn.classList.remove('done'); }, 2000);
+  btn.innerHTML = '✅ Copied!';
+  btn.classList.add('done');
+  setTimeout(() => {
+    btn.innerHTML = '📋 Copy';
+    btn.classList.remove('done');
+  }, 2000);
 }
 
 function fallback(text, btn) {
   const ta = document.createElement('textarea');
-  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-  document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, 99999);
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  ta.setSelectionRange(0, 99999);
   try { document.execCommand('copy'); showCopied(btn); } catch(e) {}
   document.body.removeChild(ta);
 }
@@ -973,7 +983,8 @@ function showCopied(btn) {
   btn.textContent = '✅ Copied!';
   setTimeout(() => btn.textContent = orig, 2000);
 }
-</script>
 
+
+</script>
 </body>
-  </html>
+</html>
